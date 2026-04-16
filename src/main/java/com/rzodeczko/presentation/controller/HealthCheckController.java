@@ -14,9 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 @RequiredArgsConstructor
 @Slf4j
+/**
+ * Controller for health check endpoints.
+ */
 public class HealthCheckController {
     private final IntegrationProperties integrationProperties;
 
+    /**
+     * Performs a health check and returns service status.
+     * @return the health check response
+     */
     @GetMapping("/")
     public ResponseEntity<HealthCheckResponseDto> healthCheck() {
         log.info("PAYMENT: {}", integrationProperties.payment().url());

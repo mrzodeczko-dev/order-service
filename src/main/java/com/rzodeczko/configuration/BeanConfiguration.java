@@ -6,5 +6,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(IntegrationProperties.class)
+/**
+ * Configuration class for enabling properties.
+ */
 public class BeanConfiguration {
 }
