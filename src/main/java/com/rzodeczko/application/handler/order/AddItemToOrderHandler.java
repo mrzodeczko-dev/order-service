@@ -1,0 +1,82 @@
+package com.rzodeczko.application.handler.order;
+
+import com.rzodeczko.application.command.inventory.CheckStockAvailabilityCommand;
+import com.rzodeczko.application.command.order.AddItemToOrderCommand;
+import com.rzodeczko.application.handler.inventory.CheckStockAvailabilityHandler;
+import com.rzodeczko.domain.model.order.Order;
+import com.rzodeczko.domain.model.order.OrderItem;
+import com.rzodeczko.domain.model.product.Product;
+import com.rzodeczko.domain.repository.OrderRepository;
+import com.rzodeczko.domain.repository.ProductRepository;
+import com.rzodeczko.domain.valueobject.Money;
+import com.rzodeczko.domain.valueobject.OrderId;
+import com.rzodeczko.domain.valueobject.ProductId;
+
+import java.util.Currency;
+
+public class AddItemToOrderHandler {
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final CheckStockAvailabilityHandler checkStockAvailabilityHandler;
+
+    public AddItemToOrderHandler(OrderRepository orderRepository, ProductRepository productRepository, CheckStockAvailabilityHandler checkStockAvailabilityHandler) {
+        this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
+        this.checkStockAvailabilityHandler = checkStockAvailabilityHandler;
+    }
+
+    public Order handle(AddItemToOrderCommand command) {
+        Order order = orderRepository
+                .findById(new OrderId(command.orderId()))
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        if (!order.isDraft()) {
+            throw new IllegalStateException("Can modify order only in DRAFT state");
+        }
+
+        Product product = productRepository
+                .findById(new ProductId(command.productId()))
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        Money unitPrice = command.unitPrice() != null
+                ? new Money(command.unitPrice(), Currency.getInstance("PLN"))
+                : product.getUnitPrice();
+
+        // Sumujemy ile tego produktu jest juz w zamowieniu (niezaleznie od ceny).
+        // Magazyn widzi produkt, nie cene - inaczej moznaby ominac limit dodajac
+        // ten sam produkt z roznymi cenami.
+        int alreadyInOrder = order
+                .getItems()
+                .stream()
+                .filter(item -> item.getProductId().id().equals(command.productId()))
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+
+        checkStockAvailabilityHandler.handle(new CheckStockAvailabilityCommand(
+                order.getStoreId().id(),
+                command.productId(),
+                command.quantity() + alreadyInOrder
+        ));
+
+        // Mergujemy pozycje o tym samym produkcie i cenie - nie tworzymy duplikatow
+        order
+                .getItems()
+                .stream()
+                .filter(item -> item.isSameProductAndPrice(
+                        new ProductId(command.productId()),
+                        unitPrice))
+                .findFirst()
+                .ifPresentOrElse(
+                        existing -> existing.changeQuantity(
+                                existing.getQuantity() + command.quantity()),
+                        () -> order.addItem(new OrderItem(
+                                new ProductId(command.productId()),
+                                command.quantity(),
+                                unitPrice
+                        ))
+                );
+
+        orderRepository.save(order);
+        return order;
+    }
+}

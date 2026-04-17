@@ -1,7 +1,7 @@
 package com.rzodeczko.presentation.controller;
 
 
-import com.rzodeczko.configuration.properties.IntegrationProperties;
+import com.rzodeczko.infrastructure.configuration.properties.IntegrationProperties;
 import com.rzodeczko.presentation.dto.HealthCheckResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
