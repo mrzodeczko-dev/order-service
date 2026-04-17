@@ -7,15 +7,30 @@ import com.rzodeczko.domain.repository.OrderRepository;
 import com.rzodeczko.domain.valueobject.ProductId;
 import com.rzodeczko.domain.valueobject.StoreId;
 
+/**
+ * Handler for checking stock availability.
+ * Validates that sufficient stock is available considering draft order reservations.
+ */
 public class CheckStockAvailabilityHandler {
     private final InventoryRepository inventoryRepository;
     private final OrderRepository orderRepository;
 
+    /**
+     * Creates a new CheckStockAvailabilityHandler.
+     * @param inventoryRepository the inventory repository
+     * @param orderRepository the order repository
+     */
     public CheckStockAvailabilityHandler(InventoryRepository inventoryRepository, OrderRepository orderRepository) {
         this.inventoryRepository = inventoryRepository;
         this.orderRepository = orderRepository;
     }
 
+    /**
+     * Handles the CheckStockAvailabilityCommand.
+     * @param command the command containing store ID, product ID and requested quantity
+     * @throws IllegalArgumentException if inventory not found
+     * @throws IllegalStateException if requested quantity exceeds available stock
+     */
     public void handle(CheckStockAvailabilityCommand command) {
         StoreId storeId = new StoreId(command.storeId());
         ProductId productId = new ProductId(command.productId());

@@ -6,13 +6,27 @@ import com.rzodeczko.domain.repository.InventoryRepository;
 import com.rzodeczko.domain.valueobject.ProductId;
 import com.rzodeczko.domain.valueobject.StoreId;
 
+/**
+ * Handler for replenishing stock.
+ * Adds quantity to inventory and saves the updated inventory.
+ */
 public class ReplenishStockHandler {
     private final InventoryRepository inventoryRepository;
 
+    /**
+     * Creates a new ReplenishStockHandler.
+     * @param inventoryRepository the inventory repository
+     */
     public ReplenishStockHandler(InventoryRepository inventoryRepository) {
         this.inventoryRepository = inventoryRepository;
     }
 
+    /**
+     * Handles the ReplenishStockCommand.
+     * @param command the command containing store ID, product ID and quantity to add
+     * @throws IllegalArgumentException if inventory not found
+     * @throws IllegalArgumentException if replenish quantity is invalid
+     */
     public void handle(ReplenishStockCommand command) {
         Inventory inventory = inventoryRepository
                 .findByStoreAndProduct(

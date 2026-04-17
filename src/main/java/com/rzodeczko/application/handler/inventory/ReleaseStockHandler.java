@@ -7,13 +7,27 @@ import com.rzodeczko.domain.repository.InventoryRepository;
 import com.rzodeczko.domain.valueobject.ProductId;
 import com.rzodeczko.domain.valueobject.StoreId;
 
+/**
+ * Handler for releasing reserved stock.
+ * Releases inventory reservation when order is cancelled and saves the updated inventory.
+ */
 public class ReleaseStockHandler {
     private final InventoryRepository inventoryRepository;
 
+    /**
+     * Creates a new ReleaseStockHandler.
+     * @param inventoryRepository the inventory repository
+     */
     public ReleaseStockHandler(InventoryRepository inventoryRepository) {
         this.inventoryRepository = inventoryRepository;
     }
 
+    /**
+     * Handles the ReleaseStockCommand.
+     * @param command the command containing store ID, product ID and quantity to release
+     * @throws IllegalArgumentException if inventory not found
+     * @throws IllegalArgumentException if release quantity is invalid
+     */
     public void handle(ReleaseStockCommand command) {
         Inventory inventory = inventoryRepository
                 .findByStoreAndProduct(

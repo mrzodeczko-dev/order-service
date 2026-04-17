@@ -2,39 +2,34 @@ services:
   # --------------------------------------------------------------------------------------------------------------------
   # ORDER MYSQL
   # --------------------------------------------------------------------------------------------------------------------
-  payment-mysql:
-    image: mysql:9.6.0  # Pinned version for deterministic behavior across environments
+  order-mysql:
+    image: mysql:9.6.0
     restart: unless-stopped
     volumes:
-      - payment-mysql:/var/lib/mysql
+      - order-mysql:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${PAYMENT_SERVICE_MYSQL_DB_NAME}
-      MYSQL_USER: ${PAYMENT_SERVICE_MYSQL_DB_USER}
-      MYSQL_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ORDER_SERVICE_MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${ORDER_SERVICE_MYSQL_DB_NAME}
+      MYSQL_USER: ${ORDER_SERVICE_MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${ORDER_SERVICE_MYSQL_DB_PASSWORD}
     command: >
       --default-time-zone='+00:00'
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
-      --innodb-buffer-pool-size=${PAYMENT_SERVICE_MYSQL_INNODB_BUFFER_POOL_SIZE}
-      --max-connections=${PAYMENT_SERVICE_MYSQL_MAX_CONNECTIONS}
-
-    # Runbook: hard caps isolate failures; one noisy container must not impact the host.
-    # Memory sizing note: 512M assumes 256M InnoDB buffer pool + runtime overhead headroom.
-    # CPU sizing note: 1 vCPU is acceptable for I/O-bound DB traffic in dev/staging.
+      --innodb-buffer-pool-size=${ORDER_SERVICE_MYSQL_INNODB_BUFFER_POOL_SIZE}
+      --max-connections=${ORDER_SERVICE_MYSQL_MAX_CONNECTIONS}
+    ports:
+      - '${ORDER_SERVICE_MYSQL_DB_PORT}:3306'
     deploy:
       resources:
         limits:
           memory: 512M
           cpus: "1.0"
-    # Runbook: keep Docker logs bounded (`50m` x `3`) to avoid host disk exhaustion.
     logging:
       driver: "json-file"
       options:
         max-size: "50m"
         max-file: "3"
-    # Runbook: healthcheck validates schema readiness, not only process/TCP availability.
-    # `$$VAR` prevents Compose-time interpolation; expansion happens inside container shell.
     healthcheck:
       test: [ "CMD-SHELL", "mysql -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD -e \"SELECT 1 FROM information_schema.schemata WHERE schema_name='$$MYSQL_DATABASE'\"" ]
       interval: 10s
@@ -43,41 +38,28 @@ services:
       start_period: 30s
     networks:
       - mr-network
-    ports:
-      - "${PAYMENT_SERVICE_MYSQL_DB_PORT}:3306"  # Expose for local development; remove in production for better security
 
   # --------------------------------------------------------------------------------------------------------------------
-  # PAYMENT SERVICE
+  # ORDER SERVICE
   # --------------------------------------------------------------------------------------------------------------------
-  payment-service:
-    image: mrzodeczko/payments-service:1.0.0  # Use pre-built image for faster startup;
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: on-failure:5
     ports:
-      - "${PAYMENT_SERVICE_PORT}:8081"
+      - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
-      payment-mysql:
+      order-mysql:
         condition: service_healthy
     environment:
-      SPRING_APPLICATION_NAME: ${PAYMENT_SERVICE_APPLICATION_NAME}
-      SPRING_DATASOURCE_URL: jdbc:mysql://${PAYMENT_SERVICE_MYSQL_DB_HOST}:3306/${PAYMENT_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${PAYMENT_SERVICE_MYSQL_DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_PASSWORD}
-      SERVER_PORT: ${PAYMENT_SERVICE_PORT}
-      TPAY_API_URL: ${PAYMENT_SERVICE_TPAY_API_URL}
-      TPAY_API_CLIENT_ID: ${PAYMENT_SERVICE_TPAY_API_CLIENT_ID}
-      TPAY_API_CLIENT_SECRET: ${PAYMENT_SERVICE_TPAY_API_CLIENT_SECRET}
-      TPAY_API_SECURITY_CODE: ${PAYMENT_SERVICE_TPAY_API_SECURITY_CODE}
-      TPAY_APP_NOTIFICATION_URL: ${PAYMENT_SERVICE_TPAY_APP_NOTIFICATION_URL}
-      TPAY_APP_RETURN_SUCCESS_URL: ${PAYMENT_SERVICE_TPAY_APP_RETURN_SUCCESS_URL}
-      TPAY_APP_RETURN_ERROR_URL: ${PAYMENT_SERVICE_TPAY_APP_RETURN_ERROR_URL}
-      SPRINGDOC_API_DOCS_SWAGGER_ENABLED: ${SPRINGDOC_API_DOCS_SWAGGER_ENABLED-false}
-
-    # Runbook: 768M provides safe JVM headroom for heap + metaspace + native overhead.
-    # Workload is I/O-bound (DB + payment provider latency), so 1 vCPU is typically enough.
-    # Scale out first; increase per-container CPU only after saturation is observed.
+      SPRING_APPLICATION_NAME: ${ORDER_SERVICE_APPLICATION_NAME}
+      SPRING_DATASOURCE_URL: jdbc:mysql://${ORDER_SERVICE_MYSQL_DB_HOST}:3306/${ORDER_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${ORDER_SERVICE_MYSQL_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${ORDER_SERVICE_MYSQL_DB_PASSWORD}
+      SERVER_PORT: ${ORDER_SERVICE_PORT}
+      INTEGRATION_PAYMENT_SERVICE_URL: ${INTEGRATION_PAYMENT_SERVICE_URL}
+      INTEGRATION_INVOICE_SERVICE_URL: ${INTEGRATION_INVOICE_SERVICE_URL}
     deploy:
       resources:
         limits:
@@ -91,8 +73,9 @@ services:
     networks:
       - mr-network
 
+
 volumes:
-  payment-mysql:
+  order-mysql:
 
 networks:
   mr-network:

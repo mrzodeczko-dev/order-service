@@ -14,17 +14,36 @@ import com.rzodeczko.domain.valueobject.ProductId;
 
 import java.util.Currency;
 
+/**
+ * Handler for adding an item to a draft order.
+ * Validates stock availability, merges items with same product and price,
+ * and saves the updated order.
+ */
 public class AddItemToOrderHandler {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final CheckStockAvailabilityHandler checkStockAvailabilityHandler;
 
+    /**
+     * Creates a new AddItemToOrderHandler.
+     * @param orderRepository the order repository
+     * @param productRepository the product repository
+     * @param checkStockAvailabilityHandler the stock availability handler
+     */
     public AddItemToOrderHandler(OrderRepository orderRepository, ProductRepository productRepository, CheckStockAvailabilityHandler checkStockAvailabilityHandler) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.checkStockAvailabilityHandler = checkStockAvailabilityHandler;
     }
 
+    /**
+     * Handles the AddItemToOrderCommand.
+     * Adds or merges a product item to the draft order after validating stock availability.
+     * @param command the command containing order ID, product ID, quantity and optional unit price
+     * @return the updated order
+     * @throws IllegalArgumentException if order or product not found
+     * @throws IllegalStateException if order is not in DRAFT status or insufficient stock
+     */
     public Order handle(AddItemToOrderCommand command) {
         Order order = orderRepository
                 .findById(new OrderId(command.orderId()))

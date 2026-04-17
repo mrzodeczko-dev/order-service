@@ -359,6 +359,15 @@ public class Order {
         return this.status == OrderStatus.PAID && !items.isEmpty();
     }
 
+    /**
+     * Checks if the order is already paid with the given payment ID.
+     * @param paymentId the payment ID to check
+     * @return true if the order is PAID and has the same payment ID
+     */
+    public boolean isAlreadyPaidWith(UUID paymentId) {
+        return this.status == OrderStatus.PAID && this.paymentId != null && this.paymentId.equals(paymentId);
+    }
+
     // Getters
 
     /**

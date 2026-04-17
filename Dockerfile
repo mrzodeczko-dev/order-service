@@ -34,7 +34,7 @@ ARG BUILD_DATE=unknown
 ARG GIT_COMMIT=unknown
 
 
-LABEL org.opencontainers.image.title="Order service"
+LABEL org.opencontainers.image.title="Order Service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
