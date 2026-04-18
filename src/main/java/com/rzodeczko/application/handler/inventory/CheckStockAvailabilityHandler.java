@@ -12,7 +12,11 @@ import com.rzodeczko.domain.valueobject.StoreId;
  * Validates that sufficient stock is available considering draft order reservations.
  */
 public class CheckStockAvailabilityHandler {
+
+    /** The inventory repository. */
     private final InventoryRepository inventoryRepository;
+
+    /** The order repository. */
     private final OrderRepository orderRepository;
 
     /**

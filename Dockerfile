@@ -1,6 +1,4 @@
-# -----------------------------------------------------------------------------------------------
-# STAGE 1: BUILD
-# -----------------------------------------------------------------------------------------------
+# Build stage
 FROM maven:3.9-eclipse-temurin-25-alpine AS build
 
 ARG APP_VERSION=unknown
@@ -16,23 +14,17 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 COPY src ./src
 
-
 RUN --mount=type=cache,target=/root/.m2 \
     mvn clean package -DskipTests -B --no-transfer-progress
 
-
 RUN java -Djarmode=tools -jar target/*.jar extract --destination target/extracted
 
-# -----------------------------------------------------------------------------------------------
-# STAGE 2: RUNTIME
-# -----------------------------------------------------------------------------------------------
-
+# Runtime stage
 FROM eclipse-temurin:25-jre-alpine AS runtime
 
 ARG APP_VERSION=unknown
 ARG BUILD_DATE=unknown
 ARG GIT_COMMIT=unknown
-
 
 LABEL org.opencontainers.image.title="Order Service"
 LABEL org.opencontainers.image.version="${APP_VERSION}"
@@ -40,21 +32,18 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
 LABEL org.opencontainers.image.vendor="Rzodeczko"
 
-
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
-
 
 COPY --from=build --chown=appuser:appgroup /build/target/extracted/lib/   ./lib/
 COPY --from=build --chown=appuser:appgroup /build/target/extracted/*.jar  ./
 
 USER appuser
 
-
-EXPOSE 8080
+EXPOSE ${SERVER_PORT:-8080}
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+  CMD wget -qO- http://localhost:${SERVER_PORT:-8080}/actuator/health/liveness || exit 1
 
 ENV JAVA_OPTS="\
   -XX:+UseContainerSupport \

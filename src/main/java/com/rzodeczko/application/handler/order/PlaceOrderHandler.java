@@ -12,6 +12,8 @@ import com.rzodeczko.domain.valueobject.OrderId;
  * The order is not saved here - it's saved atomically with stock reservation.
  */
 public class PlaceOrderHandler {
+    
+    /** The order repository. */
     private final OrderRepository orderRepository;
 
     /**
@@ -40,8 +42,10 @@ public class PlaceOrderHandler {
                 command.buyerTaxId()
         );
         order.place();
-        // Nie zapisujemy tutaj - PlaceOrderHandler tylko zmienia stan agregatu.
-        // Zapis nastapi w savePlacedOrderAtomically razem z rezerwacja stocku
+        /**
+         * Handler only mutates the aggregate in memory.
+         * The order is saved atomically with stock reservation in savePlacedOrderAtomically.
+         */
         return order;
     }
 }

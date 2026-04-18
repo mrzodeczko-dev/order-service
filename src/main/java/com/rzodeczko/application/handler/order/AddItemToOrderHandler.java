@@ -20,8 +20,14 @@ import java.util.Currency;
  * and saves the updated order.
  */
 public class AddItemToOrderHandler {
+
+    /** The order repository. */
     private final OrderRepository orderRepository;
+
+    /** The product repository. */
     private final ProductRepository productRepository;
+
+    /** The stock availability handler. */
     private final CheckStockAvailabilityHandler checkStockAvailabilityHandler;
 
     /**
@@ -61,9 +67,11 @@ public class AddItemToOrderHandler {
                 ? new Money(command.unitPrice(), Currency.getInstance("PLN"))
                 : product.getUnitPrice();
 
-        // Sumujemy ile tego produktu jest juz w zamowieniu (niezaleznie od ceny).
-        // Magazyn widzi produkt, nie cene - inaczej moznaby ominac limit dodajac
-        // ten sam produkt z roznymi cenami.
+        /**
+         * Sum quantity of this product already in the order (regardless of price).
+         * Warehouse sees the product, not the price - otherwise one could bypass limits by adding
+         * the same product with different prices.
+         */
         int alreadyInOrder = order
                 .getItems()
                 .stream()
@@ -77,7 +85,9 @@ public class AddItemToOrderHandler {
                 command.quantity() + alreadyInOrder
         ));
 
-        // Mergujemy pozycje o tym samym produkcie i cenie - nie tworzymy duplikatow
+        /**
+         * Merge items with the same product and price - do not create duplicates.
+         */
         order
                 .getItems()
                 .stream()

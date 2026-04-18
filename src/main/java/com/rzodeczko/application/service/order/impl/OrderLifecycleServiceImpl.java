@@ -1,7 +1,5 @@
 package com.rzodeczko.application.service.order.impl;
 
-
-
 import com.rzodeczko.application.command.inventory.CheckStockAvailabilityCommand;
 import com.rzodeczko.application.command.inventory.ReleaseStockCommand;
 import com.rzodeczko.application.command.order.CancelOrderCommand;
@@ -30,20 +28,45 @@ import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of OrderLifecycleService.
+ * Manages the complete lifecycle of orders including creation, placement, payment confirmation, and fulfillment.
+ */
 public class OrderLifecycleServiceImpl implements OrderLifecycleService {
 
     private static final Logger log = Logger.getLogger(OrderLifecycleServiceImpl.class.getName());
 
+    /** The create draft order handler. */
     private final CreateDraftOrderHandler createDraftOrderHandler;
+    /** The place order handler. */
     private final PlaceOrderHandler placeOrderHandler;
+    /** The fulfill order handler. */
     private final FulfillOrderHandler fulfillOrderHandler;
+    /** The cancel order handler. */
     private final CancelOrderHandler cancelOrderHandler;
+    /** The release stock handler. */
     private final ReleaseStockHandler releaseStockHandler;
+    /** The check stock availability handler. */
     private final CheckStockAvailabilityHandler checkStockAvailabilityHandler;
+    /** The payment port. */
     private final PaymentPort paymentPort;
+    /** The order repository. */
     private final OrderRepository orderRepository;
+    /** The order atomic port. */
     private final OrderAtomicPort orderAtomicPort;
 
+    /**
+     * Creates a new OrderLifecycleServiceImpl.
+     * @param createDraftOrderHandler the create draft order handler
+     * @param placeOrderHandler the place order handler
+     * @param fulfillOrderHandler the fulfill order handler
+     * @param cancelOrderHandler the cancel order handler
+     * @param releaseStockHandler the release stock handler
+     * @param checkStockAvailabilityHandler the check stock availability handler
+     * @param paymentPort the payment port
+     * @param orderRepository the order repository
+     * @param orderAtomicPort the order atomic port
+     */
     public OrderLifecycleServiceImpl(
             CreateDraftOrderHandler createDraftOrderHandler,
             PlaceOrderHandler placeOrderHandler,
@@ -73,17 +96,25 @@ public class OrderLifecycleServiceImpl implements OrderLifecycleService {
     }
 
     /**
+     * Places an order with payment initialization.
      *
-     * HTTP PRZED ATOMOWYM ZAPISEM
-     * HTTP sie nie powiedzie -> DRAFT, nic do cofania
-     * HTTP OK + DB crash -> osiercona platnosc -> reconciliation job po 30 minutach
-
-     * Co to jest  reconciliation job?
-     * Reconciliation Job to scheduler który co godzinę przegląda bazę i pyta: "czy są jakieś zamówienia
-     * w statusie DRAFT, które mają paymentId i siedzą tak od ponad 30 minut?". Jeśli tak — to znaczy że
-     * coś poszło nie tak, bo normalny flow przez 30 minut już dawno by te zamówienia popchnął do AWAITING_PAYMENT.
-     * Wtedy job wywołuje paymentPort.refundPayment() żeby anulować płatność w systemie zewnętrznym i czyści
-     * paymentId z zamówienia.
+     * Process:
+     * Step 1: Mutate aggregate in memory - only read from DB
+     * Step 2: HTTP call to payment service - OUTSIDE DB transaction (DB still sees DRAFT)
+     * Step 3: Atomic save via OrderAtomicPort
+     *         Single transaction: stock reservation + AWAITING_PAYMENT + paymentId
+     *
+     * Resilience: If HTTP succeeds but DB crashes → orphaned payment → reconciliation job after 30 minutes
+     * If HTTP fails → DRAFT remains, nothing to clean up
+     *
+     * Reconciliation Job: Hourly scheduler checks for DRAFT orders with paymentId older than 30 minutes,
+     * calls paymentPort.refundPayment() to cancel payment in external system and cleans up paymentId.
+     *
+     * @param orderId the order ID
+     * @param buyerEmail the buyer email
+     * @param buyerName the buyer name
+     * @param buyerTaxId the buyer tax ID
+     * @return the place order result DTO
      */
     @Override
     public PlaceOrderResultDto placeOrder(
@@ -92,16 +123,12 @@ public class OrderLifecycleServiceImpl implements OrderLifecycleService {
             String buyerName,
             String buyerTaxId) {
 
-        // Krok 1: mutacja agregatu w pamieci - tylko odczyt DB
         Order order = placeOrderHandler.handle(new PlaceOrderCommand(orderId, buyerEmail, buyerName, buyerTaxId));
 
-        // Krok 2: HTTP - POZA transakcja DB (DB nadal widzi DRAFT)
         PaymentInitData paymentInitData = paymentPort.initPayment(
                 orderId, order.getTotalAmount().amount(), buyerEmail, buyerName
         );
 
-        // Krok 3: Atomowy zapis przez OrderAtomicPort
-        // Jedna transakcja: rezerwacja stocku + AWAITING_PAYMENT + paymentId
         orderAtomicPort.savePlacedOrderAtomically(order, paymentInitData);
 
         log.info("Order placed. orderId=%s, paymentId=%s".formatted(orderId, paymentInitData.paymentId()));
@@ -113,8 +140,16 @@ public class OrderLifecycleServiceImpl implements OrderLifecycleService {
     }
 
     /**
-     * Callback z payment-service
-     * Idempotencja - systemy platnosci wysylaja at-least-once
+     * Confirms payment for an order.
+     *
+     * Callback from payment service with idempotency guarantee.
+     * Payment systems send at-least-once delivery, so duplicate callbacks may occur.
+     * If order is already PAID with the same paymentId, silently ignore (idempotent).
+     *
+     * Single atomic operation: mark order as PAID and create invoice_outbox_tasks.
+     *
+     * @param orderId the order ID
+     * @param paymentId the payment ID
      */
     @Override
     public void confirmPayment(UUID orderId, UUID paymentId) {
@@ -122,13 +157,11 @@ public class OrderLifecycleServiceImpl implements OrderLifecycleService {
                 .findById(new OrderId(orderId))
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        // Duplicat callbacku - cichy return
         if (order.isAlreadyPaidWith(paymentId)) {
             log.info("Order %s already PAID with paymentId=%s, skipping".formatted(orderId, paymentId));
             return;
         }
 
-        // Jedna transakcja: markPaid + INSERT invoice_outbox_tasks
         orderAtomicPort.confirmPaymentAtomically(orderId, paymentId);
 
         log.info("Order %s marked as PAID, outbox task created. paymentId=%s".formatted(orderId, paymentId));

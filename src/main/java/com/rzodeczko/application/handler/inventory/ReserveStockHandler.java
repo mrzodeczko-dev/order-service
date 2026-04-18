@@ -1,6 +1,5 @@
 package com.rzodeczko.application.handler.inventory;
 
-
 import com.rzodeczko.application.command.inventory.ReserveStockCommand;
 import com.rzodeczko.domain.model.inventory.Inventory;
 import com.rzodeczko.domain.repository.InventoryRepository;
@@ -12,6 +11,8 @@ import com.rzodeczko.domain.valueobject.StoreId;
  * Reserves inventory quantity for an order and saves the updated inventory.
  */
 public class ReserveStockHandler {
+
+    /** The inventory repository. */
     private final InventoryRepository inventoryRepository;
 
     /**

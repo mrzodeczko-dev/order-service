@@ -11,6 +11,8 @@ import com.rzodeczko.domain.valueobject.StoreId;
  * Adds quantity to inventory and saves the updated inventory.
  */
 public class ReplenishStockHandler {
+
+    /** The inventory repository. */
     private final InventoryRepository inventoryRepository;
 
     /**

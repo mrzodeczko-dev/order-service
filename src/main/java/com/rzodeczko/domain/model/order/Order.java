@@ -27,14 +27,18 @@ public class Order {
     /** The total amount of the order. */
     private Money totalAmount = Money.ZERO_PLN;
 
-    // Snapshot of buyer data at order placement time.
-    // Order must be self-sufficient even if customer changes account data.
+    /**
+     * Buyer details snapshot at order placement time.
+     * Order must be self-sufficient even if customer changes account data.
+     */
     private String buyerEmail;
     private String buyerName;
     private String buyerTaxId;
 
-    // References to external services.
-    // Keep IDs to link order with payment and invoice without additional queries.
+    /**
+     * External service references and metadata.
+     * IDs are kept to link order with payment and invoice without additional queries.
+     */
     private UUID paymentId;
     private UUID invoiceId;
     private String paymentRedirectUrl;
@@ -119,7 +123,9 @@ public class Order {
         );
     }
 
-    // State mutations
+    /**
+     * Mutates order state, calculates business logic.
+     */
 
     /**
      * Assigns buyer details to the order.
@@ -341,7 +347,9 @@ public class Order {
         this.storeId = newStoreId;
     }
 
-    // Predicates
+    /**
+     * Predicate methods for checking order state.
+     */
 
     /**
      * Checks if the order is in DRAFT status.
@@ -368,7 +376,9 @@ public class Order {
         return this.status == OrderStatus.PAID && this.paymentId != null && this.paymentId.equals(paymentId);
     }
 
-    // Getters
+    /**
+     * Getter methods for accessing order properties.
+     */
 
     /**
      * Gets the order ID.
@@ -467,7 +477,9 @@ public class Order {
     }
 
 
-    // Helper methods
+    /**
+     * Helper methods for internal order logic.
+     */
 
     /**
      * Ensures the order is in DRAFT status.
