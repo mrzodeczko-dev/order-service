@@ -372,7 +372,7 @@ graph LR
 ## 🧪 Testing Strategy
 [Back to Table of Contents](#toc)
 
-**16 unit test classes** — plain JUnit 5 + AssertJ, no Spring context. Integration tests (`*IT.java`) run with Failsafe during `mvn verify`; no IT classes yet, plugin configured and ready.
+**21 unit test classes** — plain JUnit 5 + AssertJ, no Spring context. Integration tests (`*IT.java`) run with Failsafe during `mvn verify`; no IT classes yet, plugin configured and ready.
 
 **Coverage gate:** JaCoCo enforces **80% instruction coverage** — build fails if not met.
 
@@ -397,15 +397,21 @@ graph LR
 | `ProductIdTest` | UUID construction, null guard, random factory, equality |
 | `StoreIdTest` | UUID construction, null guard, random factory, equality |
 
-**Application Command Handlers — 5 classes**
+**Application Command Handlers — 11 classes**
 
 | Class | Key Scenarios |
 |-------|--------------|
+| `AddItemToOrderHandlerTest` | Add item to draft order, validate stock, merge items with same product/price, product not found |
+| `CancelOrderHandlerTest` | Cancel order in any state, order not found, verify state transition |
+| `CreateDraftOrderHandlerTest` | Create draft order, generate order ID, save to repository, order starts empty |
+| `FulfillOrderHandlerTest` | Fulfill paid order, update inventory, order not found, inventory not found |
+| `PlaceOrderHandlerTest` | Full place flow, not-found, buyer-details assignment, empty-items guard |
+| `RemoveItemFromOrderHandlerTest` | Remove item from order, item not found, verify only specific item removed |
+| `ReplaceProductInOrderHandlerTest` | Replace product, validate stock, remove old and add new, use product price |
 | `CheckStockAvailabilityHandlerTest` | Availability check, draft-order reservations, no-draft edge case |
 | `ReleaseStockHandlerTest` | Successful release, not-found, over-release, zero/negative guards |
 | `ReplenishStockHandlerTest` | Successful replenish, not-found, multiple replenishments, zero/negative guards |
 | `ReserveStockHandlerTest` | Successful reserve, not-found, over-reserve, zero-quantity guard |
-| `PlaceOrderHandlerTest` | Full place flow, not-found, buyer-details assignment, empty-items guard |
 
 ```bash
 mvn test        # unit tests only
