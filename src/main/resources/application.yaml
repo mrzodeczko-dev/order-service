@@ -32,3 +32,13 @@ integration:
     url: ${INTEGRATION_PAYMENT_SERVICE_URL}
   invoice:
     url: ${INTEGRATION_INVOICE_SERVICE_URL}
+
+scheduler:
+  expire-awaiting-payment:
+    interval-ms: 30000
+    cutoff: 1
+  invoice-outbox:
+    interval-ms: 5000
+  reconciliation:
+    interval-ms: 3600000
+    payment-age-minutes: 30

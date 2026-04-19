@@ -1,5 +1,7 @@
 package com.rzodeczko.application.port;
 
+import com.rzodeczko.application.port.data.InvoiceItemData;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +28,4 @@ public interface InvoicePort {
     /**
      * Data transfer object for invoice items.
      */
-    record InvoiceItemData(UUID productId, int quantity, java.math.BigDecimal unitPrice) {
-    }
 }

@@ -1,6 +1,7 @@
 package com.rzodeczko.infrastructure.adapter.http;
 
 import com.rzodeczko.application.port.InvoicePort;
+import com.rzodeczko.application.port.data.InvoiceItemData;
 import com.rzodeczko.infrastructure.adapter.http.dto.CreateInvoiceRequestDto;
 import com.rzodeczko.infrastructure.adapter.http.dto.CreateInvoiceResponseDto;
 import com.rzodeczko.infrastructure.adapter.http.dto.ItemRequestDto;

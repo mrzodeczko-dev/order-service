@@ -1,6 +1,8 @@
 package com.rzodeczko.infrastructure.persistence.mapper;
 
 import com.rzodeczko.domain.model.order.OrderItem;
+import com.rzodeczko.domain.valueobject.Money;
+import com.rzodeczko.domain.valueobject.ProductId;
 import com.rzodeczko.infrastructure.persistence.entity.OrderItemEntity;
 import org.springframework.stereotype.Component;
 

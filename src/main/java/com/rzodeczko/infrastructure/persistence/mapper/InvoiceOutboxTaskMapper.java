@@ -1,5 +1,6 @@
 package com.rzodeczko.infrastructure.persistence.mapper;
 
+import com.rzodeczko.domain.model.outbox.InvoiceOutboxStatus;
 import com.rzodeczko.domain.model.outbox.InvoiceOutboxTask;
 import com.rzodeczko.infrastructure.persistence.entity.InvoiceOutboxTaskEntity;
 import org.springframework.stereotype.Component;
