@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class PaymentReconciliationJob {
 
         log.warn("PaymentReconciliationJob: found {} orphaned payment(s)", orphanedOrders.size());
         orphanedOrders.forEach(order -> {
+            UUID paymentId = order.getPaymentId();
             try {
                 paymentPort.refundPayment(order.getPaymentId());
                 order.clearPaymentData();
@@ -41,13 +43,13 @@ public class PaymentReconciliationJob {
                 log.info(
                         "PaymentReconciliationJob: orphaned payment cancelled. orderId={}, paymentId={}",
                         order.getId().id(),
-                        order.getPaymentId()
+                        paymentId
                 );
             } catch (Exception e) {
                 log.error(
                         "PaymentReconciliationJob: failed. orderId={}, paymentId={}, error={}",
                         order.getId().id(),
-                        order.getPaymentId(),
+                        paymentId,
                         e.getMessage()
                 );
             }

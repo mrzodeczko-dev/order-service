@@ -1,6 +1,8 @@
 package com.rzodeczko.application.handler.order;
 
 import com.rzodeczko.application.command.order.FulfillOrderCommand;
+import com.rzodeczko.domain.exception.InventoryNotFoundException;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.inventory.Inventory;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.repository.InventoryRepository;
@@ -20,7 +22,8 @@ public class FulfillOrderHandler {
 
     /**
      * Creates a new FulfillOrderHandler.
-     * @param orderRepository the order repository
+     *
+     * @param orderRepository     the order repository
      * @param inventoryRepository the inventory repository
      */
     public FulfillOrderHandler(
@@ -34,15 +37,16 @@ public class FulfillOrderHandler {
     /**
      * Handles the FulfillOrderCommand.
      * Updates inventory quantities for all items and marks order as FULFILLED.
+     *
      * @param command the command containing order ID
      * @return the fulfilled order
      * @throws IllegalArgumentException if order or inventory not found
-     * @throws IllegalStateException if order is not in PAID status
+     * @throws IllegalStateException    if order is not in PAID status
      */
     public Order handle(FulfillOrderCommand command) {
         Order order = orderRepository
                 .findById(new OrderId(command.orderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
 
         StoreId storeId = order.getStoreId();
 
@@ -52,10 +56,7 @@ public class FulfillOrderHandler {
                 .map(item -> {
                     Inventory inventory = inventoryRepository
                             .findByStoreAndProduct(storeId, item.getProductId())
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "Inventory not found for product %s in store %s"
-                                            .formatted(item.getProductId().id(), storeId.id())
-                            ));
+                            .orElseThrow(() -> new InventoryNotFoundException(storeId.id(), item.getProductId().id()));
                     inventory.updateQuantityWhenFulfilled(item.getQuantity());
                     return inventory;
                 })

@@ -1,5 +1,7 @@
 package com.rzodeczko.domain.model.order;
 
+import com.rzodeczko.domain.exception.InvalidOrderStateException;
+import com.rzodeczko.domain.exception.OrderItemNotFoundException;
 import com.rzodeczko.domain.valueobject.Money;
 import com.rzodeczko.domain.valueobject.OrderId;
 import com.rzodeczko.domain.valueobject.ProductId;
@@ -180,25 +182,24 @@ public class Order {
         ensureDraft();
         boolean removed = items.removeIf(item -> item.getProductId().equals(productId));
         if (!removed) {
-            throw new IllegalArgumentException(
-                    "Item with product id " + productId + " not found in order");
+            throw new OrderItemNotFoundException(productId);
         }
         recalculateTotal();
     }
 
     /**
      * Places the order.
-     * @throws IllegalStateException if order has no items or buyer details missing
+     * @throws InvalidOrderStateException if order has no items or buyer details missing
      */
     public void place() {
         ensureDraft();
 
         if (items.isEmpty()) {
-            throw new IllegalStateException("Order cannot be placed without items");
+            throw new InvalidOrderStateException("Order cannot be placed without items");
         }
 
         if (buyerEmail == null || buyerName == null || buyerTaxId == null) {
-            throw new IllegalStateException("Buyer details must be assigned before placing order");
+            throw new InvalidOrderStateException("Buyer details must be assigned before placing order");
         }
 
         this.status = OrderStatus.PLACED;
@@ -209,12 +210,12 @@ public class Order {
      * Transition PLACED -> AWAITING_PAYMENT.
      * @param paymentId the payment ID
      * @param redirectUrl the payment redirect URL
-     * @throws IllegalStateException if not in PLACED status
+     * @throws InvalidOrderStateException if not in PLACED status
      * @throws IllegalArgumentException if paymentId is null
      */
     public void markAwaitingPayment(UUID paymentId, String redirectUrl) {
         if (this.status != OrderStatus.PLACED) {
-            throw new IllegalStateException(
+            throw new InvalidOrderStateException(
                     "Only PLACED orders can be moved to AWAITING_PAYMENT"
             );
         }
@@ -233,12 +234,12 @@ public class Order {
      * Marks the order as paid.
      * Transition AWAITING_PAYMENT -> PAID.
      * @param confirmedPaymentId the confirmed payment ID
-     * @throws IllegalStateException if not in AWAITING_PAYMENT status
+     * @throws InvalidOrderStateException if not in AWAITING_PAYMENT status
      * @throws IllegalArgumentException if payment ID mismatch
      */
     public void markPaid(UUID confirmedPaymentId) {
         if (this.status != OrderStatus.AWAITING_PAYMENT) {
-            throw new IllegalStateException(
+            throw new InvalidOrderStateException(
                     "Only AWAITING_PAYMENT orders can be marked as PAID"
             );
         }
@@ -256,11 +257,11 @@ public class Order {
     /**
      * Assigns an invoice to the order.
      * @param invoiceId the invoice ID
-     * @throws IllegalStateException if not in PAID status
+     * @throws InvalidOrderStateException if not in PAID status
      */
     public void assignInvoice(UUID invoiceId) {
         if (this.status != OrderStatus.PAID) {
-            throw new IllegalStateException(
+            throw new InvalidOrderStateException(
                     "Invoice can only be assigned to PAID orders"
             );
         }
@@ -269,18 +270,18 @@ public class Order {
 
     /**
      * Fulfills the order.
-     * @throws IllegalStateException if not in PAID status
+     * @throws InvalidOrderStateException if not in PAID status
      */
     public void fulfill() {
         if (status != OrderStatus.PAID) {
-            throw new IllegalStateException("Only PAID orders can be fulfilled");
+            throw new InvalidOrderStateException("Only PAID orders can be fulfilled");
         }
         this.status = OrderStatus.FULFILLED;
     }
 
     /**
      * Cancels the order.
-     * @throws IllegalStateException if in invalid status for cancellation
+     * @throws InvalidOrderStateException if in invalid status for cancellation
      */
     public void cancel() {
         if (
@@ -288,7 +289,7 @@ public class Order {
                         status != OrderStatus.AWAITING_PAYMENT &&
                         status != OrderStatus.PAID
         ) {
-            throw new IllegalStateException(
+            throw new InvalidOrderStateException(
                     "Order in status %s cannot be cancelled".formatted(status.name())
             );
         }
@@ -298,11 +299,11 @@ public class Order {
     /**
      * Reverts to DRAFT after technical error at PLACED.
      * Not for AWAITING_PAYMENT - payment already initiated.
-     * @throws IllegalStateException if not in PLACED status
+     * @throws InvalidOrderStateException if not in PLACED status
      */
     public void revertToDraft() {
         if (this.status != OrderStatus.PLACED) {
-            throw new IllegalStateException(
+            throw new InvalidOrderStateException(
                     "Only PLACED orders can be reverted to DRAFT, current: " + this.status
             );
         }
@@ -319,7 +320,7 @@ public class Order {
      */
     public void clearPaymentData() {
         if (this.status != OrderStatus.DRAFT) {
-            throw new IllegalStateException("clearPaymentData only allowed in DRAFT state");
+            throw new InvalidOrderStateException("clearPaymentData only allowed in DRAFT state");
         }
         this.paymentId = null;
         this.paymentRedirectUrl = null;
@@ -332,12 +333,12 @@ public class Order {
     /**
      * Relocates the order to a new store.
      * @param newStoreId the new store ID
-     * @throws IllegalStateException if not in DRAFT status
+     * @throws InvalidOrderStateException if not in DRAFT status
      * @throws IllegalArgumentException if newStoreId is null
      */
     public void relocate(StoreId newStoreId) {
         if (!isDraft()) {
-            throw new IllegalStateException("Only DRAFT orders can be relocated");
+            throw new InvalidOrderStateException("Only DRAFT orders can be relocated");
         }
 
         if (newStoreId == null) {
@@ -483,11 +484,11 @@ public class Order {
 
     /**
      * Ensures the order is in DRAFT status.
-     * @throws IllegalStateException if not draft
+     * @throws InvalidOrderStateException if not draft
      */
     private void ensureDraft() {
         if (this.status != OrderStatus.DRAFT) {
-            throw new IllegalStateException("Can modify order only in DRAFT state");
+            throw new InvalidOrderStateException("Can modify order only in DRAFT state");
         }
     }
 
@@ -498,6 +499,6 @@ public class Order {
         this.totalAmount = items
                 .stream()
                 .map(OrderItem::lineTotal)
-                .reduce(Money.ZERO_PLN, (a, b) -> a.add(b));
+                .reduce(Money.ZERO_PLN, Money::add);
     }
 }

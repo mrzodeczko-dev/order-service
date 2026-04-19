@@ -2,6 +2,7 @@ package com.rzodeczko.application.handler.order;
 
 
 import com.rzodeczko.application.command.order.PlaceOrderCommand;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.repository.OrderRepository;
 import com.rzodeczko.domain.valueobject.OrderId;
@@ -34,7 +35,7 @@ public class PlaceOrderHandler {
     public Order handle(PlaceOrderCommand command) {
         Order order = orderRepository
                 .findById(new OrderId(command.orderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Order Not Found"));
+                .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
 
         order.assignBuyerDetails(
                 command.buyerEmail(),

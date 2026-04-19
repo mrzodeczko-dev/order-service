@@ -3,6 +3,9 @@ package com.rzodeczko.application.handler.order;
 import com.rzodeczko.application.command.inventory.CheckStockAvailabilityCommand;
 import com.rzodeczko.application.command.order.AddItemToOrderCommand;
 import com.rzodeczko.application.handler.inventory.CheckStockAvailabilityHandler;
+import com.rzodeczko.domain.exception.InvalidOrderStateException;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
+import com.rzodeczko.domain.exception.ProductNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.model.order.OrderItem;
 import com.rzodeczko.domain.model.product.Product;
@@ -53,15 +56,15 @@ public class AddItemToOrderHandler {
     public Order handle(AddItemToOrderCommand command) {
         Order order = orderRepository
                 .findById(new OrderId(command.orderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
 
         if (!order.isDraft()) {
-            throw new IllegalStateException("Can modify order only in DRAFT state");
+            throw new InvalidOrderStateException("Can modify order only in DRAFT state");
         }
 
         Product product = productRepository
                 .findById(new ProductId(command.productId()))
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(command.productId()));
 
         Money unitPrice = command.unitPrice() != null
                 ? new Money(command.unitPrice(), Currency.getInstance("PLN"))

@@ -2,6 +2,7 @@ package com.rzodeczko.application.service.order.impl;
 
 import com.rzodeczko.application.dto.OrderSummaryDto;
 import com.rzodeczko.application.service.order.OrderQueryService;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.repository.OrderRepository;
 import com.rzodeczko.domain.valueobject.OrderId;
 
@@ -21,7 +22,7 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         return orderRepository
                 .findById(new OrderId(orderId))
                 .map(OrderSummaryDto::from)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
     }
 
     @Override

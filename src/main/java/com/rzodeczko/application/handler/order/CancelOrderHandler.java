@@ -2,6 +2,7 @@ package com.rzodeczko.application.handler.order;
 
 
 import com.rzodeczko.application.command.order.CancelOrderCommand;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.repository.OrderRepository;
 import com.rzodeczko.domain.valueobject.OrderId;
@@ -31,7 +32,7 @@ public class CancelOrderHandler {
     public Order handle(CancelOrderCommand command) {
         Order order = orderRepository
                 .findById(new OrderId(command.orderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException(command.orderId()));
         order.cancel();
         orderRepository.save(order);
         return order;

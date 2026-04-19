@@ -18,6 +18,8 @@ import com.rzodeczko.application.handler.order.PlaceOrderHandler;
 import com.rzodeczko.application.port.OrderAtomicPort;
 import com.rzodeczko.application.port.PaymentPort;
 import com.rzodeczko.application.service.order.OrderLifecycleService;
+import com.rzodeczko.domain.exception.InvalidOrderStateException;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.model.order.OrderItem;
 import com.rzodeczko.domain.repository.OrderRepository;
@@ -155,7 +157,7 @@ public class OrderLifecycleServiceImpl implements OrderLifecycleService {
     public void confirmPayment(UUID orderId, UUID paymentId) {
         Order order = orderRepository
                 .findById(new OrderId(orderId))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         if (order.isAlreadyPaidWith(paymentId)) {
             log.info("Order %s already PAID with paymentId=%s, skipping".formatted(orderId, paymentId));
@@ -200,10 +202,10 @@ public class OrderLifecycleServiceImpl implements OrderLifecycleService {
     public OrderSummaryDto moveOrderToAnotherStore(UUID orderId, UUID oldStoreId, UUID newStoreId) {
         Order order = orderRepository
                 .findById(new OrderId(orderId))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         if (!order.isDraft()) {
-            throw new IllegalStateException("Only DRAFT orders can be moved");
+            throw new InvalidOrderStateException("Only DRAFT orders can be moved");
         }
 
         if (!order.getStoreId().id().equals(oldStoreId)) {

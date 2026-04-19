@@ -1,6 +1,7 @@
 package com.rzodeczko.application.handler.inventory;
 
 import com.rzodeczko.application.command.inventory.ReplenishStockCommand;
+import com.rzodeczko.domain.exception.InventoryNotFoundException;
 import com.rzodeczko.domain.model.inventory.Inventory;
 import com.rzodeczko.domain.repository.InventoryRepository;
 import com.rzodeczko.domain.valueobject.ProductId;
@@ -34,7 +35,7 @@ public class ReplenishStockHandler {
                 .findByStoreAndProduct(
                         new StoreId(command.storeId()),
                         new ProductId(command.productId()))
-                .orElseThrow(() -> new IllegalArgumentException("Inventory not found"));
+                .orElseThrow(() -> new InventoryNotFoundException(command.storeId(), command.productId()));
         inventory.replenish(command.quantity());
         inventoryRepository.save(inventory);
     }

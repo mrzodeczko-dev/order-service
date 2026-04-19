@@ -5,6 +5,7 @@ import com.rzodeczko.application.command.inventory.ReserveStockCommand;
 import com.rzodeczko.application.handler.inventory.ReserveStockHandler;
 import com.rzodeczko.application.port.OrderAtomicPort;
 import com.rzodeczko.application.port.data.PaymentInitData;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.model.outbox.InvoiceOutboxTask;
 import com.rzodeczko.domain.repository.InvoiceOutboxTaskRepository;
@@ -65,7 +66,7 @@ public class OrderAtomicOperations implements OrderAtomicPort {
     public void confirmPaymentAtomically(UUID orderId, UUID paymentId) {
         Order order = orderRepository
                 .findById(new OrderId(orderId))
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
         order.markPaid(paymentId);
         orderRepository.save(order);
 
