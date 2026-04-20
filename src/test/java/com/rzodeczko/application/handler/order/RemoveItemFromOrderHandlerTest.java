@@ -1,6 +1,7 @@
 package com.rzodeczko.application.handler.order;
 
 import com.rzodeczko.application.command.order.RemoveItemFromOrderCommand;
+import com.rzodeczko.domain.exception.OrderItemNotFoundException;
 import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.model.order.OrderItem;
@@ -131,7 +132,7 @@ class RemoveItemFromOrderHandlerTest {
 
         // when & then
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(OrderItemNotFoundException.class);
     }
 
     @Test

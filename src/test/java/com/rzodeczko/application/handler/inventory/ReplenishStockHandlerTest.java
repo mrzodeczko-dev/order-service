@@ -1,6 +1,7 @@
 package com.rzodeczko.application.handler.inventory;
 
 import com.rzodeczko.application.command.inventory.ReplenishStockCommand;
+import com.rzodeczko.domain.exception.InventoryNotFoundException;
 import com.rzodeczko.domain.model.inventory.Inventory;
 import com.rzodeczko.domain.repository.InventoryRepository;
 import com.rzodeczko.domain.valueobject.ProductId;
@@ -62,8 +63,7 @@ class ReplenishStockHandlerTest {
 
         // when & then
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Inventory not found");
+                .isInstanceOf(InventoryNotFoundException.class);
 
         verify(inventoryRepository, times(1)).findByStoreAndProduct(storeId, productId);
         verify(inventoryRepository, never()).save(any());
@@ -138,4 +138,3 @@ class ReplenishStockHandlerTest {
         verify(inventoryRepository, times(1)).save(inventory);
     }
 }
-

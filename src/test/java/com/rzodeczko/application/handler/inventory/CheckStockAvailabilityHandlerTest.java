@@ -1,6 +1,8 @@
 package com.rzodeczko.application.handler.inventory;
 
 import com.rzodeczko.application.command.inventory.CheckStockAvailabilityCommand;
+import com.rzodeczko.domain.exception.InsufficientStockException;
+import com.rzodeczko.domain.exception.InventoryNotFoundException;
 import com.rzodeczko.domain.model.inventory.Inventory;
 import com.rzodeczko.domain.repository.InventoryRepository;
 import com.rzodeczko.domain.repository.OrderRepository;
@@ -69,8 +71,7 @@ class CheckStockAvailabilityHandlerTest {
 
         // when & then
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Inventory not found");
+                .isInstanceOf(InventoryNotFoundException.class);
 
         verify(inventoryRepository, times(1)).findByStoreAndProduct(storeId, productId);
         verify(orderRepository, never()).sumQuantityOfProductInDraftOrders(any(), any());
@@ -90,7 +91,7 @@ class CheckStockAvailabilityHandlerTest {
 
         // when & then - available: 80 (100 - 20), real available: 80, requested: 100
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InsufficientStockException.class)
                 .hasMessageContaining("Not enough stock for product")
                 .hasMessageContaining("Requested: 100")
                 .hasMessageContaining("available: 80");
@@ -113,7 +114,7 @@ class CheckStockAvailabilityHandlerTest {
 
         // when & then - available: 80 (100 - 20), real available: 50 (80 - 30), requested: 60
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InsufficientStockException.class)
                 .hasMessageContaining("Not enough stock for product")
                 .hasMessageContaining("Requested: 60")
                 .hasMessageContaining("available: 50");
@@ -155,4 +156,3 @@ class CheckStockAvailabilityHandlerTest {
         verify(orderRepository, times(1)).sumQuantityOfProductInDraftOrders(productId, storeId);
     }
 }
-

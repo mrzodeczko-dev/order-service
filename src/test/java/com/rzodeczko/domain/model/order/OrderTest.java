@@ -1,5 +1,6 @@
 package com.rzodeczko.domain.model.order;
 
+import com.rzodeczko.domain.exception.InvalidOrderStateException;
 import com.rzodeczko.domain.valueobject.Money;
 import com.rzodeczko.domain.valueobject.OrderId;
 import com.rzodeczko.domain.valueobject.ProductId;
@@ -65,7 +66,7 @@ class OrderTest {
 
         // when & then
         assertThatThrownBy(() -> order.addItem(item))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InvalidOrderStateException.class)
                 .hasMessage("Can modify order only in DRAFT state");
     }
 
@@ -128,7 +129,7 @@ class OrderTest {
 
         // when & then
         assertThatThrownBy(order::place)
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InvalidOrderStateException.class)
                 .hasMessage("Order cannot be placed without items");
     }
 

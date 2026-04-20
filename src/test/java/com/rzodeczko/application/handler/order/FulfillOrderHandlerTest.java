@@ -57,7 +57,9 @@ class FulfillOrderHandlerTest {
         order.addItem(item);
         order.assignBuyerDetails("buyer@example.com", "John Doe", "123456789");
         order.place();
-        order.markPaid(UUID.randomUUID());
+        UUID paymentId = UUID.randomUUID();
+        order.markAwaitingPayment(paymentId, "http://payment.example.com");
+        order.markPaid(paymentId);
 
         Inventory inventory = new Inventory(storeId, productId, 10, 2);
 
@@ -102,7 +104,9 @@ class FulfillOrderHandlerTest {
         order.addItem(item);
         order.assignBuyerDetails("buyer@example.com", "John Doe", "123456789");
         order.place();
-        order.markPaid(UUID.randomUUID());
+        UUID paymentId = UUID.randomUUID();
+        order.markAwaitingPayment(paymentId, "http://payment.example.com");
+        order.markPaid(paymentId);
 
         FulfillOrderCommand command = new FulfillOrderCommand(orderId.id());
 
@@ -130,7 +134,9 @@ class FulfillOrderHandlerTest {
         order.addItem(item2);
         order.assignBuyerDetails("buyer@example.com", "John Doe", "123456789");
         order.place();
-        order.markPaid(UUID.randomUUID());
+        UUID paymentId = UUID.randomUUID();
+        order.markAwaitingPayment(paymentId, "http://payment.example.com");
+        order.markPaid(paymentId);
 
         Inventory inventory1 = new Inventory(storeId, productId1, 10, 2);
         Inventory inventory2 = new Inventory(storeId, productId2, 20, 3);
@@ -160,7 +166,9 @@ class FulfillOrderHandlerTest {
         order.addItem(item);
         order.assignBuyerDetails("buyer@example.com", "John Doe", "123456789");
         order.place();
-        order.markPaid(UUID.randomUUID());
+        UUID paymentId = UUID.randomUUID();
+        order.markAwaitingPayment(paymentId, "http://payment.example.com");
+        order.markPaid(paymentId);
 
         Inventory inventory = new Inventory(storeId, productId, 10, 2);
 

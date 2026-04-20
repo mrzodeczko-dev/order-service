@@ -1,6 +1,8 @@
 package com.rzodeczko.application.handler.order;
 
 import com.rzodeczko.application.command.order.PlaceOrderCommand;
+import com.rzodeczko.domain.exception.InvalidOrderStateException;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.model.order.OrderItem;
 import com.rzodeczko.domain.model.order.OrderStatus;
@@ -84,8 +86,8 @@ class PlaceOrderHandlerTest {
 
         // when & then
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Order Not Found");
+                .isInstanceOf(OrderNotFoundException.class)
+                .hasMessageContaining("Order not found");
 
         verify(orderRepository, times(1)).findById(new OrderId(command.orderId()));
     }
@@ -132,7 +134,7 @@ class PlaceOrderHandlerTest {
 
         // when & then
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InvalidOrderStateException.class)
                 .hasMessage("Order cannot be placed without items");
     }
 
@@ -163,4 +165,3 @@ class PlaceOrderHandlerTest {
         assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
     }
 }
-

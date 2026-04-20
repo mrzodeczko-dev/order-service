@@ -1,6 +1,7 @@
 package com.rzodeczko.application.handler.order;
 
 import com.rzodeczko.application.command.order.CancelOrderCommand;
+import com.rzodeczko.domain.exception.OrderNotFoundException;
 import com.rzodeczko.domain.model.order.Order;
 import com.rzodeczko.domain.model.order.OrderItem;
 import com.rzodeczko.domain.model.order.OrderStatus;
@@ -74,8 +75,8 @@ class CancelOrderHandlerTest {
 
         // when & then
         assertThatThrownBy(() -> handler.handle(command))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Order Not Found");
+                .isInstanceOf(OrderNotFoundException.class)
+                .hasMessageContaining("Order not found");
 
         verify(orderRepository, times(1)).findById(new OrderId(command.orderId()));
         verify(orderRepository, never()).save(any());
@@ -84,6 +85,13 @@ class CancelOrderHandlerTest {
     @Test
     void shouldCancelDraftOrder() {
         // given
+        ProductId productId = ProductId.newId();
+        Money unitPrice = new Money(new BigDecimal("10.50"), Currency.getInstance("PLN"));
+        OrderItem item = new OrderItem(productId, 2, unitPrice);
+        order.addItem(item);
+        order.assignBuyerDetails("buyer@example.com", "John Doe", "123456789");
+        order.place();
+
         CancelOrderCommand command = new CancelOrderCommand(orderId.id());
 
         when(orderRepository.findById(new OrderId(command.orderId())))
@@ -103,6 +111,8 @@ class CancelOrderHandlerTest {
         Money unitPrice = new Money(new BigDecimal("10.50"), Currency.getInstance("PLN"));
         OrderItem item = new OrderItem(productId, 2, unitPrice);
         order.addItem(item);
+        order.assignBuyerDetails("buyer@example.com", "John Doe", "123456789");
+        order.place();
 
         CancelOrderCommand command = new CancelOrderCommand(orderId.id());
 
@@ -118,4 +128,3 @@ class CancelOrderHandlerTest {
         assertThat(result.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 }
-
