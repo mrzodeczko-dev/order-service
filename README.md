@@ -19,7 +19,7 @@ Order Service is a production-ready backend managing the full order lifecycle �
 - [🔄 How It Works](#how-it-works)
 - [🌐 API Endpoints](#api-endpoints)
 - [🚀 Getting Started](#getting-started)
-- [🏗️ Running the Full Stack](#running-the-full-stack)
+- [🏗️ Running the Complete Stack](#running-the-complete-stack)
 - [⚙️ Environment Variables](#environment-variables)
 - [🛠️ Common Issues](#common-issues)
 - [🏗️ Architecture](#architecture)
@@ -197,8 +197,8 @@ Verify: `curl http://localhost:8083/actuator/health` → `{"status":"UP"}`
 
 ---
 
-<a id="running-the-full-stack"></a>
-## 🏗️ Running the Full Stack
+<a id="running-the-complete-stack"></a>
+## 🏗️ Running the Complete Stack
 [Back to Table of Contents](#toc)
 
 To run the entire order management platform (Order Service, Payment Service, Invoice Service, and their MySQL databases), use the `compose-stack.yml` file with the provided `.env.stack` environment file.
@@ -209,7 +209,7 @@ To run the entire order management platform (Order Service, Payment Service, Inv
 
 ### Environment Configuration
 
-The `.env.stack` file is already provided in the project root with all necessary environment variables for the full stack.
+The `.env.stack.template` file is provided in the project root as a template. You need to fill in your specific values (e.g., API keys, public domain URLs) and save it as `.env.stack`.
 
 ### Start All Services
 
@@ -536,8 +536,8 @@ Spring Boot Actuator exposes `/actuator/health` (full), `/actuator/health/livene
 │       └── java/com/rzodeczko/           # 16 unit test classes
 │           ├── application/handler/      # Handler tests (inventory × 4, order × 1)
 │           └── domain/                   # Model tests (× 7) + value object tests (× 4)
-├── .env.stack                           # Environment variables for full stack
-├── compose-stack.yml                     # Full stack: order-service, payment-service, invoice-service + MySQL databases
+├── .env.stack                           # Environment variables for complete stack
+├── compose-stack.yml                     # Complete stack: order-service, payment-service, invoice-service + MySQL databases
 ├── docker-compose.yml                    # order-mysql + order-service services
 ├── Dockerfile                            # Multi-stage build (maven → jre-alpine, non-root user)
 ├── pom.xml                               # Maven build descriptor
