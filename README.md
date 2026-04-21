@@ -19,6 +19,7 @@ Order Service is a production-ready backend managing the full order lifecycle �
 - [🔄 How It Works](#how-it-works)
 - [🌐 API Endpoints](#api-endpoints)
 - [🚀 Getting Started](#getting-started)
+- [🏗️ Running the Full Stack](#running-the-full-stack)
 - [⚙️ Environment Variables](#environment-variables)
 - [🛠️ Common Issues](#common-issues)
 - [🏗️ Architecture](#architecture)
@@ -193,6 +194,41 @@ docker-compose up -d --build
 ```
 
 Verify: `curl http://localhost:8083/actuator/health` → `{"status":"UP"}`
+
+---
+
+<a id="running-the-full-stack"></a>
+## 🏗️ Running the Full Stack
+[Back to Table of Contents](#toc)
+
+To run the entire order management platform (Order Service, Payment Service, Invoice Service, and their MySQL databases), use the `compose-stack.yml` file with the provided `.env.stack` environment file.
+
+### Prerequisites
+
+- Docker and Docker Compose v2+
+
+### Environment Configuration
+
+The `.env.stack` file is already provided in the project root with all necessary environment variables for the full stack.
+
+### Start All Services
+
+```bash
+docker-compose --env-file .env.stack -f compose-stack.yml up -d --build
+```
+
+### Verify Services
+
+1. **Order Service:** `curl http://localhost:8080/actuator/health` → `{"status":"UP"}`
+2. **Payment Service:** `curl http://localhost:8081/actuator/health` → `{"status":"UP"}`
+3. **Invoice Service:** `curl http://localhost:8082/actuator/health` → `{"status":"UP"}`
+4. **MySQL Databases:** Use `docker-compose --env-file .env.stack -f compose-stack.yml exec <service>-mysql mysql -u root -p` (passwords defined in `.env.stack`)
+
+### Stop All Services
+
+```bash
+docker-compose --env-file .env.stack -f compose-stack.yml down
+```
 
 ---
 
@@ -500,6 +536,8 @@ Spring Boot Actuator exposes `/actuator/health` (full), `/actuator/health/livene
 │       └── java/com/rzodeczko/           # 16 unit test classes
 │           ├── application/handler/      # Handler tests (inventory × 4, order × 1)
 │           └── domain/                   # Model tests (× 7) + value object tests (× 4)
+├── .env.stack                           # Environment variables for full stack
+├── compose-stack.yml                     # Full stack: order-service, payment-service, invoice-service + MySQL databases
 ├── docker-compose.yml                    # order-mysql + order-service services
 ├── Dockerfile                            # Multi-stage build (maven → jre-alpine, non-root user)
 ├── pom.xml                               # Maven build descriptor

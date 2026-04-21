@@ -37,3 +37,4 @@ mvnw
 mvnw.cmd
 maven-wrapper.jar
 maeven-wrapper.properties
+.env.stack

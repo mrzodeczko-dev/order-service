@@ -1,0 +1,239 @@
+services:
+  # --------------------------------------------------------------------------------------------------------------------
+  # ORDER MYSQL
+  # --------------------------------------------------------------------------------------------------------------------
+  order-mysql:
+    image: mysql:9.6.0
+    restart: unless-stopped
+    volumes:
+      - order-mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ORDER_SERVICE_MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${ORDER_SERVICE_MYSQL_DB_NAME}
+      MYSQL_USER: ${ORDER_SERVICE_MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${ORDER_SERVICE_MYSQL_DB_PASSWORD}
+    command: >
+      --default-time-zone='+00:00'
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=${ORDER_SERVICE_MYSQL_INNODB_BUFFER_POOL_SIZE}
+      --max-connections=${ORDER_SERVICE_MYSQL_MAX_CONNECTIONS}
+    ports:
+      - '${ORDER_SERVICE_MYSQL_DB_PORT}:3306'
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: [ "CMD-SHELL", "mysql -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD -e \"SELECT 1 FROM information_schema.schemata WHERE schema_name='$$MYSQL_DATABASE'\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - mr-network
+
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # PAYMENT MYSQL
+  # --------------------------------------------------------------------------------------------------------------------
+  payment-mysql:
+    image: mysql:9.6.0
+    restart: unless-stopped
+    volumes:
+      - payment-mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${PAYMENT_SERVICE_MYSQL_DB_NAME}
+      MYSQL_USER: ${PAYMENT_SERVICE_MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_PASSWORD}
+    command: >
+      --default-time-zone='+00:00'
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=${PAYMENT_SERVICE_MYSQL_INNODB_BUFFER_POOL_SIZE}
+      --max-connections=${PAYMENT_SERVICE_MYSQL_MAX_CONNECTIONS}
+    ports:
+      - '${PAYMENT_SERVICE_MYSQL_DB_PORT}:3306'
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: [ "CMD-SHELL", "mysql -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD -e \"SELECT 1 FROM information_schema.schemata WHERE schema_name='$$MYSQL_DATABASE'\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - mr-network
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # INVOICE MYSQL
+  # --------------------------------------------------------------------------------------------------------------------
+  invoice-mysql:
+    image: mysql:9.6.0
+    restart: unless-stopped
+    volumes:
+      - invoice-mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${INVOICE_SERVICE_MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${INVOICE_SERVICE_MYSQL_DB_NAME}
+      MYSQL_USER: ${INVOICE_SERVICE_MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${INVOICE_SERVICE_MYSQL_DB_PASSWORD}
+    command: >
+      --default-time-zone='+00:00'
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=${INVOICE_SERVICE_MYSQL_INNODB_BUFFER_POOL_SIZE}
+      --max-connections=${INVOICE_SERVICE_MYSQL_MAX_CONNECTIONS}
+    ports:
+      - '${INVOICE_SERVICE_MYSQL_DB_PORT}:3306'
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: [ "CMD-SHELL", "mysql -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD -e \"SELECT 1 FROM information_schema.schemata WHERE schema_name='$$MYSQL_DATABASE'\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - mr-network
+
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # PAYMENT SERVICE
+  # --------------------------------------------------------------------------------------------------------------------
+  payment-service:
+    image: mrzodeczko/payments-service:1.0.0
+    restart: on-failure:5
+    ports:
+      - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
+    depends_on:
+      payment-mysql:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: ${PAYMENT_SERVICE_APPLICATION_NAME}
+      SPRING_DATASOURCE_URL: jdbc:mysql://${PAYMENT_SERVICE_MYSQL_DB_HOST}:3306/${PAYMENT_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${PAYMENT_SERVICE_MYSQL_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PAYMENT_SERVICE_MYSQL_DB_PASSWORD}
+      SERVER_PORT: ${PAYMENT_SERVICE_PORT}
+      TPAY_API_URL: ${PAYMENT_SERVICE_TPAY_API_URL}
+      TPAY_API_CLIENT_ID: ${PAYMENT_SERVICE_TPAY_API_CLIENT_ID}
+      TPAY_API_CLIENT_SECRET: ${PAYMENT_SERVICE_TPAY_API_CLIENT_SECRET}
+      TPAY_API_SECURITY_CODE: ${PAYMENT_SERVICE_TPAY_API_SECURITY_CODE}
+      TPAY_APP_NOTIFICATION_URL: ${PAYMENT_SERVICE_TPAY_APP_NOTIFICATION_URL}
+      TPAY_APP_RETURN_SUCCESS_URL: ${PAYMENT_SERVICE_TPAY_APP_RETURN_SUCCESS_URL}
+      TPAY_APP_RETURN_ERROR_URL: ${PAYMENT_SERVICE_TPAY_APP_RETURN_ERROR_URL}
+      TPAY_APP_EXTERNAL_SERVICE_URL: ${PAYMENT_SERVICE_EXTERNAL_SERVICE_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - mr-network
+
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # INVOICE SERVICE
+  # --------------------------------------------------------------------------------------------------------------------
+  invoice-service:
+    image: mrzodeczko/invoice-service:1.0.0
+    restart: on-failure:5
+    ports:
+      - "${INVOICE_SERVICE_PORT}:${INVOICE_SERVICE_PORT}"
+    depends_on:
+      invoice-mysql:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: ${INVOICE_SERVICE_APPLICATION_NAME}
+      SPRING_DATASOURCE_URL: jdbc:mysql://${INVOICE_SERVICE_MYSQL_DB_HOST}:3306/${INVOICE_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${INVOICE_SERVICE_MYSQL_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${INVOICE_SERVICE_MYSQL_DB_PASSWORD}
+      SERVER_PORT: ${INVOICE_SERVICE_PORT}
+      INVOICES_URL: ${INVOICE_SERVICE_FAKTUROWNIA_URL}
+      INVOICES_TOKEN: ${INVOICE_SERVICE_FAKTUROWNIA_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - mr-network
+
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # ORDER SERVICE
+  # --------------------------------------------------------------------------------------------------------------------
+  order-service:
+    image: mrzodeczko/order-service:1.0.0
+    restart: on-failure:5
+    ports:
+      - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
+    depends_on:
+      order-mysql:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      invoice-service:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: ${ORDER_SERVICE_APPLICATION_NAME}
+      SPRING_DATASOURCE_URL: jdbc:mysql://${ORDER_SERVICE_MYSQL_DB_HOST}:3306/${ORDER_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${ORDER_SERVICE_MYSQL_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${ORDER_SERVICE_MYSQL_DB_PASSWORD}
+      SERVER_PORT: ${ORDER_SERVICE_PORT}
+      INTEGRATION_PAYMENT_SERVICE_URL: ${INTEGRATION_PAYMENT_SERVICE_URL}
+      INTEGRATION_INVOICE_SERVICE_URL: ${INTEGRATION_INVOICE_SERVICE_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - mr-network
+
+
+volumes:
+  order-mysql:
+  payment-mysql:
+  invoice-mysql:
+
+networks:
+  mr-network:
