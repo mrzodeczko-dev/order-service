@@ -2,6 +2,7 @@
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
  [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/)
+ [![Liquibase](https://img.shields.io/badge/Liquibase-4.27-blue.svg)](https://www.liquibase.org/)
  [![ShedLock](https://img.shields.io/badge/ShedLock-6.0.2-informational.svg)](https://github.com/lukas-krecan/ShedLock)
  [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![codecov](https://codecov.io/gh/mrzodeczko-dev/order-service/branch/master/graph/badge.svg)](https://codecov.io/gh/mrzodeczko-dev/order-service)
@@ -268,7 +269,9 @@ docker-compose --env-file .env.stack -f compose-stack.yml down
 
 2. **Database not ready / connection refused** — MySQL healthcheck must pass before the app starts. Check with `docker-compose ps order-mysql` and `docker-compose logs order-mysql`. HikariCP timeout is 2 000 ms with a pool of 20.
 
-3. **Payment Service / Invoice Service unreachable** — ensure both services are up and reachable on `mr-network`. Use container service names as hostnames inside Docker Compose, or `host.docker.internal` for cross-compose setups. Test with:
+3. **Liquibase migration fails on startup** — check logs for `liquibase.exception.LockException` (another instance holds the changelog lock — run `liquibase releaseLocks` or delete the `DATABASECHANGELOGLOCK` row) or `ValidationFailedException` (JPA entity and DB schema are out of sync — create a new changeset instead of modifying an existing one).
+
+4. **Payment Service / Invoice Service unreachable** — ensure both services are up and reachable on `mr-network`. Use container service names as hostnames inside Docker Compose, or `host.docker.internal` for cross-compose setups. Test with:
    ```bash
    docker exec -it order-service wget -qO- http://payment-service:8082/actuator/health
    ```
@@ -377,6 +380,7 @@ graph LR
 - **CQRS-style Command Handlers:** Each use case has a dedicated command + handler (`PlaceOrderHandler`, `ReserveStockHandler`, etc.).
 - **Invoice Outbox Pattern:** Invoice creation is saved as `InvoiceOutboxTask` in the same DB transaction as the order update — guarantees at-least-once delivery.
 - **ShedLock:** All three scheduled jobs acquire a distributed lock (backed by the `shedlock` table) — safe in multi-instance deployments.
+- **Liquibase Migrations:** All DDL is managed via versioned Liquibase changesets (`V1`–`V6`) — schema evolves safely across deployments without manual SQL. JPA runs in `validate` mode and never modifies the schema.
 - **Virtual Threads + container-aware JVM:** `spring.threads.virtual.enabled=true` with `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC`.
 - **Domain-Driven Design (DDD):** Domain layer is the core with rich aggregates (`Order`), value objects (`Money`, `OrderId`), repositories, and domain logic — decoupled from infrastructure via ports.
 
@@ -392,6 +396,7 @@ graph LR
 | Framework | Spring Boot 4.0.5 |
 | Web | Spring WebMVC, Spring Validation |
 | Persistence | Spring Data JPA, HikariCP (max-pool 20) |
+| Database Migrations | Liquibase 4.27 (6 versioned changesets, `validate` DDL mode) |
 | HTTP Client | Spring RestClient |
 | Database | MySQL 9.6.0 |
 | Scheduling | ShedLock 6.0.2 (JDBC template provider) |
@@ -529,12 +534,22 @@ Spring Boot Actuator exposes `/actuator/health` (full), `/actuator/health/livene
 │   │   │       ├── dto/                  # Request/response DTOs, mappers, ErrorResponseDto
 │   │   │       └── exception/            # GlobalExceptionHandler
 │   │   └── resources/
-│   │       ├── application.yaml          # App config (virtual threads, HikariCP, schedulers,
-│   │       │                             #   integration URLs)
-│   │       └── schema.sql                # DDL: shedlock + invoice_outbox_tasks tables
+│   │       ├── db/
+│   │       │   └── changelog/
+│   │       │       ├── db.changelog-master.xml          # Liquibase master changelog
+│   │       │       └── changes/
+│   │       │           ├── V1__create_products_table.xml
+│   │       │           ├── V2__create_orders_table.xml
+│   │       │           ├── V3__create_order_items_table.xml
+│   │       │           ├── V4__create_inventories_table.xml
+│   │       │           ├── V5__create_invoice_outbox_tasks_table.xml
+│   │       │           └── V6__create_shedlock_table.xml
+│   │       ├── application.yaml          # App config (virtual threads, HikariCP, Liquibase,
+│   │       │                             #   schedulers, integration URLs)
+│   │       └── schema.sql                # Legacy placeholder — DDL managed by Liquibase
 │   └── test/
-│       └── java/com/rzodeczko/           # 16 unit test classes
-│           ├── application/handler/      # Handler tests (inventory × 4, order × 1)
+│       └── java/com/rzodeczko/           # 21 unit test classes
+│           ├── application/handler/      # Handler tests (inventory × 4, order × 7)
 │           └── domain/                   # Model tests (× 7) + value object tests (× 4)
 ├── .env.stack                           # Environment variables for complete stack
 ├── compose-stack.yml                     # Complete stack: order-service, payment-service, invoice-service + MySQL databases
