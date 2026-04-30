@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="V2__create_orders_table" author="order-service">
+        <createTable tableName="orders">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="store_id" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)"/>
+            <column name="total_amount" type="DECIMAL(19,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="buyer_email" type="VARCHAR(255)"/>
+            <column name="buyer_name" type="VARCHAR(255)"/>
+            <column name="buyer_tax_id" type="VARCHAR(100)"/>
+            <column name="payment_id" type="VARCHAR(36)"/>
+            <column name="invoice_id" type="VARCHAR(36)"/>
+            <column name="payment_redirect_url" type="VARCHAR(2048)"/>
+            <column name="awaiting_payment_since" type="DATETIME(6)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

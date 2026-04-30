@@ -8,7 +8,7 @@ spring:
       enabled: true
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -23,9 +23,10 @@ spring:
       connection-timeout: 2000
       keepalive-time: 30000
       max-lifetime: 1800000
-  sql:
-    init:
-      mode: always
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
 
 integration:
   payment:
