@@ -2,6 +2,8 @@ package com.rzodeczko.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -18,6 +20,7 @@ public class OrderItemEntity {
     @Id
     @GeneratedValue
     @EqualsAndHashCode.Include
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
 
     @Setter
@@ -26,6 +29,7 @@ public class OrderItemEntity {
     private OrderEntity order;
 
     @Column(name = "product_id", nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID productId;
 
     @Column(nullable = false)

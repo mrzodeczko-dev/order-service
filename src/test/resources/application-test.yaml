@@ -1,0 +1,31 @@
+server:
+  port: 0
+spring:
+  application:
+    name: order-service-test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+integration:
+  payment:
+    url: http://localhost:9999
+  invoice:
+    url: http://localhost:9998
+
+scheduler:
+  expire-awaiting-payment:
+    interval-ms: 30000
+    cutoff: 1
+  invoice-outbox:
+    interval-ms: 5000
+  reconciliation:
+    interval-ms: 3600000
+    payment-age-minutes: 30

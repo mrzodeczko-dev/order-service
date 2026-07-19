@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class ProductEntity {
     @Id
     @EqualsAndHashCode.Include
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -37,5 +40,6 @@ public class ProductEntity {
     private BigDecimal taxRate;
 
     @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
     private boolean active;
 }

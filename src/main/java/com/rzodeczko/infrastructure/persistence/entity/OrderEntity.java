@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,9 +23,11 @@ public class OrderEntity {
 
     @Id
     @EqualsAndHashCode.Include
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
 
     @Column(name="store_id", nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID storeId;
 
     @Enumerated(EnumType.STRING)
@@ -45,9 +49,11 @@ public class OrderEntity {
     private String buyerTaxId;
 
     @Column(name = "payment_id")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID paymentId;
 
     @Column(name = "invoice_id")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID invoiceId;
 
     @Column(name = "payment_redirect_url")

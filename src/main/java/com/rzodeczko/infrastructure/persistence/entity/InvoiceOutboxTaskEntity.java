@@ -2,6 +2,8 @@ package com.rzodeczko.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,9 +22,11 @@ import java.util.UUID;
 public class InvoiceOutboxTaskEntity {
     @Id
     @EqualsAndHashCode.Include
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID id;
 
     @Column(nullable = false, unique = true)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID orderId;
 
     @Column(nullable = false)

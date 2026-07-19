@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
- * Consumer-side contract test: Order Service → Payment Service.
+ * Consumer-side contract test: Order Service -> Payment Service.
  */
 class HttpPaymentAdapterContractTest {
 
