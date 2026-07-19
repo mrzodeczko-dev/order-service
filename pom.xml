@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.rzodeczko</groupId>
     <artifactId>order-service</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>order-service</name>
     <description>order-service</description>
     <url/>
