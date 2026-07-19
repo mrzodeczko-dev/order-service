@@ -10,7 +10,6 @@ import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,11 +25,7 @@ class HttpPaymentAdapterContractTest {
             .downloadStub("com.app", "payment-service")
             .withPort(0)
             .stubsMode(StubRunnerProperties.StubsMode.REMOTE)
-            .repoRoot("https://maven.pkg.github.com/mrzodeczko-dev/payment-service")
-            .withProperties(Map.of(
-                    "stubrunner.username", System.getenv().getOrDefault("GITHUB_ACTOR", ""),
-                    "stubrunner.password", System.getenv().getOrDefault("GITHUB_TOKEN", "")
-            ));
+            .repoRoot("https://maven.pkg.github.com/mrzodeczko-dev/payment-service");
 
     private HttpPaymentAdapter adapter;
 

@@ -39,6 +39,8 @@
         <failsafe.version>3.2.5</failsafe.version>
         <surefire.version>3.2.5</surefire.version>
         <spring-cloud-contract.version>5.0.3</spring-cloud-contract.version>
+        <stubrunner.username/>
+        <stubrunner.password/>
     </properties>
     <dependencies>
         <dependency>
@@ -212,6 +214,10 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
+                    <systemPropertyVariables>
+                        <stubrunner.username>${stubrunner.username}</stubrunner.username>
+                        <stubrunner.password>${stubrunner.password}</stubrunner.password>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
