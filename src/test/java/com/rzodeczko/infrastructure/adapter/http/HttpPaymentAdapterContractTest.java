@@ -5,6 +5,7 @@ import com.rzodeczko.infrastructure.configuration.properties.IntegrationProperti
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.cloud.contract.stubrunner.StubRunnerOptionsBuilder;
 import org.springframework.cloud.contract.stubrunner.junit.StubRunnerExtension;
 import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties;
 import org.springframework.web.client.RestClient;
@@ -22,10 +23,14 @@ class HttpPaymentAdapterContractTest {
 
     @RegisterExtension
     static StubRunnerExtension stubRunner = new StubRunnerExtension()
-            .downloadStub("com.app", "payment-service")
-            .withPort(0)
-            .stubsMode(StubRunnerProperties.StubsMode.REMOTE)
-            .repoRoot("https://maven.pkg.github.com/mrzodeczko-dev/payment-service");
+            .options(new StubRunnerOptionsBuilder()
+                    .withStubs("com.app:payment-service")
+                    .withPort(0)
+                    .withStubsMode(StubRunnerProperties.StubsMode.REMOTE)
+                    .withStubRepositoryRoot("https://maven.pkg.github.com/mrzodeczko-dev/payment-service")
+                    .withUsername(System.getenv("GITHUB_ACTOR"))
+                    .withPassword(System.getenv("GITHUB_TOKEN"))
+                    .build());
 
     private HttpPaymentAdapter adapter;
 
