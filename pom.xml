@@ -26,12 +26,19 @@
         <tag/>
         <url/>
     </scm>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/mrzodeczko-dev/order-service</url>
+        </repository>
+    </distributionManagement>
     <properties>
         <java.version>25</java.version>
         <shedlock.version>6.0.2</shedlock.version>
         <jacoco.version>0.8.14</jacoco.version>
         <failsafe.version>3.2.5</failsafe.version>
         <surefire.version>3.2.5</surefire.version>
+        <spring-cloud-contract.version>5.0.3</spring-cloud-contract.version>
     </properties>
     <dependencies>
         <dependency>
@@ -106,7 +113,42 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>spring-mock-mvc</artifactId>
+            <version>6.0.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-contract-verifier</artifactId>
+            <version>${spring-cloud-contract.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-contract-stub-runner</artifactId>
+            <version>${spring-cloud-contract.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>github-payment-service</id>
+            <url>https://maven.pkg.github.com/mrzodeczko-dev/payment-service</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>github-invoice-service</id>
+            <url>https://maven.pkg.github.com/mrzodeczko-dev/invoice-service</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
@@ -189,6 +231,18 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-maven-plugin</artifactId>
+                <version>${spring-cloud-contract.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <baseClassForTests>
+                        com.rzodeczko.contract.BaseContractTest
+                    </baseClassForTests>
+                    <testFramework>JUNIT5</testFramework>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

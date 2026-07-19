@@ -6,6 +6,11 @@ on:
   workflow_dispatch:
   workflow_call:
 
+permissions:
+  contents: read
+  packages: write
+
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -20,15 +25,24 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
           cache: 'maven'
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
 
       - name: Build (package)
         run: mvn clean package --batch-mode --no-transfer-progress
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run unit tests
         run: mvn test --batch-mode --no-transfer-progress
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run integration tests
         run: mvn failsafe:integration-test failsafe:verify --batch-mode --no-transfer-progress
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate JaCoCo report
         run: mvn jacoco:report --batch-mode --no-transfer-progress
@@ -39,6 +53,8 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/
           retention-days: 7
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -46,3 +62,8 @@ jobs:
           files: target/site/jacoco/jacoco.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Publish stub JAR to GitHub Packages
+        run: mvn deploy -DskipTests --batch-mode --no-transfer-progress
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
