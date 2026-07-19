@@ -25,7 +25,6 @@ class HttpInvoiceAdapterContractTest {
     static StubRunnerExtension stubRunner = new StubRunnerExtension()
             .options(new StubRunnerOptionsBuilder()
                     .withStubs("com.rzodeczko:invoice-service")
-                    .withPort(0)
                     .withStubsMode(StubRunnerProperties.StubsMode.REMOTE)
                     .withStubRepositoryRoot("https://maven.pkg.github.com/mrzodeczko-dev/invoice-service")
                     .withUsername(System.getenv("GITHUB_ACTOR"))

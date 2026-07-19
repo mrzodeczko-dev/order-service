@@ -25,7 +25,6 @@ class HttpPaymentAdapterContractTest {
     static StubRunnerExtension stubRunner = new StubRunnerExtension()
             .options(new StubRunnerOptionsBuilder()
                     .withStubs("com.app:payment-service")
-                    .withPort(0)
                     .withStubsMode(StubRunnerProperties.StubsMode.REMOTE)
                     .withStubRepositoryRoot("https://maven.pkg.github.com/mrzodeczko-dev/payment-service")
                     .withUsername(System.getenv("GITHUB_ACTOR"))

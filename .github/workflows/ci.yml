@@ -52,12 +52,12 @@ jobs:
           EOF
 
       - name: Build (package)
-        run: mvn clean package --batch-mode --no-transfer-progress -Dstubrunner.username=$GITHUB_ACTOR -Dstubrunner.password=$GITHUB_TOKEN
+        run: mvn clean package -e --batch-mode --no-transfer-progress
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run unit tests
-        run: mvn test --batch-mode --no-transfer-progress -Dstubrunner.username=$GITHUB_ACTOR -Dstubrunner.password=$GITHUB_TOKEN
+        run: mvn test -e --batch-mode --no-transfer-progress
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
