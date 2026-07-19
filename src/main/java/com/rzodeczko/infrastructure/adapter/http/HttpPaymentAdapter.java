@@ -68,6 +68,30 @@ public class HttpPaymentAdapter implements PaymentPort {
 
     @Override
     public void refundPayment(UUID paymentId) {
-        log.warn("refundPayment not implemented yet. paymentId={}", paymentId);
+        log.info("Refunding payment. paymentId={}", paymentId);
+        try {
+            restClient
+                    .post()
+                    .uri("/payments/{paymentId}/refund", paymentId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
+                        throw new IllegalArgumentException(
+                                "Payment service rejected refund request. status=" + res.getStatusCode()
+                        );
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
+                        throw new IllegalStateException(
+                                "Payment service unavailable for refund. status=" + res.getStatusCode()
+                        );
+                    })
+                    .toBodilessEntity();
+
+            log.info("Payment refunded. paymentId={}", paymentId);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw e;
+        } catch (RestClientException e) {
+            throw new IllegalStateException("Communication error with payment service during refund. paymentId=" + paymentId, e);
+        }
     }
 }

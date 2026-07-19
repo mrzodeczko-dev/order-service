@@ -1,2 +1,0 @@
--- Schema management has been migrated to Liquibase.
--- See: src/main/resources/db/changelog/db.changelog-master.xml

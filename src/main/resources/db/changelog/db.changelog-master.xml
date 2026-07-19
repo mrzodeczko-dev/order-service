@@ -5,11 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
-    <include file="db/changelog/changes/V1__create_products_table.xml"/>
-    <include file="db/changelog/changes/V2__create_orders_table.xml"/>
-    <include file="db/changelog/changes/V3__create_order_items_table.xml"/>
-    <include file="db/changelog/changes/V4__create_inventories_table.xml"/>
-    <include file="db/changelog/changes/V5__create_invoice_outbox_tasks_table.xml"/>
-    <include file="db/changelog/changes/V6__create_shedlock_table.xml"/>
+    <include file="/db/changelog/changes/create_products_table.xml"/>
+    <include file="/db/changelog/changes/create_orders_table.xml"/>
+    <include file="/db/changelog/changes/create_order_items_table.xml"/>
+    <include file="/db/changelog/changes/create_inventories_table.xml"/>
+    <include file="/db/changelog/changes/create_invoice_outbox_tasks_table.xml"/>
+    <include file="/db/changelog/changes/create_shedlock_table.xml"/>
+    <include file="/db/changelog/changes/add_tax_rate_to_products.xml"/>
 
 </databaseChangeLog>

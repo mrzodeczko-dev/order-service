@@ -33,6 +33,9 @@ public class ProductEntity {
     @Column(nullable = false)
     private String currency;
 
+    @Column(name = "tax_rate", nullable = false)
+    private BigDecimal taxRate;
+
     @Column(nullable = false)
     private boolean active;
 }

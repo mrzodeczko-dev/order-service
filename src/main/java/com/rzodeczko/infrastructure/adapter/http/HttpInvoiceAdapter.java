@@ -38,7 +38,7 @@ public class HttpInvoiceAdapter implements InvoicePort {
         try {
             List<ItemRequestDto> itemRequests = items
                     .stream()
-                    .map(i -> new ItemRequestDto(i.name(), i.quantity(), i.price()))
+                    .map(i -> new ItemRequestDto(i.name(), i.quantity(), i.price(), i.taxRate()))
                     .toList();
 
             CreateInvoiceResponseDto response = restClient

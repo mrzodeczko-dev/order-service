@@ -56,7 +56,7 @@ class AddItemToOrderHandlerTest {
         // given
         ProductId productId = ProductId.newId();
         Money unitPrice = new Money(new BigDecimal("10.50"), Currency.getInstance("PLN"));
-        Product product = new Product(productId, "SKU123", "Product", unitPrice, true);
+        Product product = new Product(productId, "SKU123", "Product", unitPrice, new BigDecimal("23"), true);
 
         AddItemToOrderCommand command = new AddItemToOrderCommand(
                 orderId.id(),
@@ -75,8 +75,8 @@ class AddItemToOrderHandlerTest {
 
         // then
         assertThat(result.getItems()).hasSize(1);
-        assertThat(result.getItems().get(0).getProductId()).isEqualTo(productId);
-        assertThat(result.getItems().get(0).getQuantity()).isEqualTo(2);
+        assertThat(result.getItems().getFirst().getProductId()).isEqualTo(productId);
+        assertThat(result.getItems().getFirst().getQuantity()).isEqualTo(2);
         verify(orderRepository, times(1)).save(result);
     }
 
@@ -157,7 +157,7 @@ class AddItemToOrderHandlerTest {
         // given
         ProductId productId = ProductId.newId();
         Money unitPrice = new Money(new BigDecimal("10.50"), Currency.getInstance("PLN"));
-        Product product = new Product(productId, "SKU123", "Product", unitPrice, true);
+        Product product = new Product(productId, "SKU123", "Product", unitPrice, new BigDecimal("23"), true);
         OrderItem existingItem = new OrderItem(productId, 2, unitPrice);
         order.addItem(existingItem);
 
@@ -186,7 +186,7 @@ class AddItemToOrderHandlerTest {
         // given
         ProductId productId = ProductId.newId();
         Money productPrice = new Money(new BigDecimal("10.50"), Currency.getInstance("PLN"));
-        Product product = new Product(productId, "SKU123", "Product", productPrice, true);
+        Product product = new Product(productId, "SKU123", "Product", productPrice, new BigDecimal("23"), true);
 
         AddItemToOrderCommand command = new AddItemToOrderCommand(
                 orderId.id(),
@@ -212,7 +212,7 @@ class AddItemToOrderHandlerTest {
         // given
         ProductId productId = ProductId.newId();
         Money unitPrice = new Money(new BigDecimal("10.50"), Currency.getInstance("PLN"));
-        Product product = new Product(productId, "SKU123", "Product", unitPrice, true);
+        Product product = new Product(productId, "SKU123", "Product", unitPrice, new BigDecimal("23"), true);
 
         AddItemToOrderCommand command = new AddItemToOrderCommand(
                 orderId.id(),

@@ -17,6 +17,7 @@ public class ProductEntityMapper {
                 entity.getSku(),
                 entity.getName(),
                 new Money(entity.getUnitPrice(), Currency.getInstance(entity.getCurrency())),
+                entity.getTaxRate(),
                 entity.isActive()
         );
     }

@@ -43,6 +43,7 @@ public class DataInitializer {
                         .name("Laptop Dell XPS 13")
                         .unitPrice(BigDecimal.valueOf(5999))
                         .currency(PLN)
+                        .taxRate(BigDecimal.valueOf(23))
                         .active(true)
                         .build(),
                 ProductEntity
@@ -52,6 +53,7 @@ public class DataInitializer {
                         .name("iPhone 17 Pro")
                         .unitPrice(BigDecimal.valueOf(6999))
                         .currency(PLN)
+                        .taxRate(BigDecimal.valueOf(23))
                         .active(true)
                         .build(),
                 ProductEntity
@@ -61,6 +63,7 @@ public class DataInitializer {
                         .name("Sony WH-1000XM5")
                         .unitPrice(BigDecimal.valueOf(1499))
                         .currency(PLN)
+                        .taxRate(BigDecimal.valueOf(23))
                         .active(true)
                         .build()
         ));

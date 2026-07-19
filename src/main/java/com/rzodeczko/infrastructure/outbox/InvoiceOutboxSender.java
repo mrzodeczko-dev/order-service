@@ -2,13 +2,16 @@ package com.rzodeczko.infrastructure.outbox;
 
 import com.rzodeczko.application.port.InvoicePort;
 import com.rzodeczko.application.port.NotificationPort;
-import com.rzodeczko.application.port.ProductNameResolver;
 import com.rzodeczko.application.port.data.InvoiceItemData;
 import com.rzodeczko.domain.model.order.Order;
+import com.rzodeczko.domain.model.product.Product;
 import com.rzodeczko.domain.model.outbox.InvoiceOutboxTask;
 import com.rzodeczko.domain.repository.InvoiceOutboxTaskRepository;
 import com.rzodeczko.domain.repository.OrderRepository;
+import com.rzodeczko.domain.repository.ProductRepository;
 import com.rzodeczko.domain.valueobject.OrderId;
+
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,7 +29,7 @@ public class InvoiceOutboxSender {
     private final NotificationPort notificationPort;
     private final OrderRepository orderRepository;
     private final InvoiceOutboxTaskRepository invoiceOutboxTaskRepository;
-    private final ProductNameResolver productNameResolver;
+    private final ProductRepository productRepository;
 
     /**
      * REQUIRES_NEW - kazdy task ma wlasna transakcje
@@ -52,11 +55,22 @@ public class InvoiceOutboxSender {
             List<InvoiceItemData> invoiceItems = order
                     .getItems()
                     .stream()
-                    .map(item -> new InvoiceItemData(
-                            productNameResolver.resolve(item.getProductId()),
-                            item.getQuantity(),
-                            item.getUnitPrice().amount()
-                    )).toList();
+                    .map(item -> {
+                        Product product = productRepository.findById(item.getProductId())
+                                .orElse(null);
+                        String productName = product != null
+                                ? product.getName()
+                                : "Unknown product ( " + item.getProductId().id() + " )";
+                        BigDecimal taxRate = product != null
+                                ? product.getTaxRate()
+                                : BigDecimal.ZERO;
+                        return new InvoiceItemData(
+                                productName,
+                                item.getQuantity(),
+                                item.getUnitPrice().amount(),
+                                taxRate
+                        );
+                    }).toList();
 
             // HTTP do invoice-service - REQUIRES_NEW = oddzielna transakcja
             UUID invoiceId = invoicePort.generateInvoice(
