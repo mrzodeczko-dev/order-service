@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
+
 public abstract class BaseContractTest {
 
     private final OrderLifecycleService orderLifecycleService = mock(OrderLifecycleService.class);

@@ -8,9 +8,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.cloud.contract.stubrunner.StubRunnerOptionsBuilder;
 import org.springframework.cloud.contract.stubrunner.junit.StubRunnerExtension;
 import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
+import java.net.http.HttpClient;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +26,8 @@ class HttpPaymentAdapterContractTest {
     @RegisterExtension
     static StubRunnerExtension stubRunner = new StubRunnerExtension()
             .options(new StubRunnerOptionsBuilder()
-                    .withStubs("com.app:payment-service")
+                    
+                    .withStubs("com.rzodeczko:payment-service")
                     .withStubsMode(StubRunnerProperties.StubsMode.REMOTE)
                     .withStubRepositoryRoot("https://maven.pkg.github.com/mrzodeczko-dev/payment-service")
                     .withUsername(System.getenv("GITHUB_ACTOR"))
@@ -35,7 +38,7 @@ class HttpPaymentAdapterContractTest {
 
     @BeforeEach
     void setup() {
-        int port = stubRunner.findStubUrl("com.app", "payment-service").getPort();
+        int port = stubRunner.findStubUrl("com.rzodeczko", "payment-service").getPort();
         String baseUrl = "http://localhost:" + port;
 
         IntegrationProperties properties = new IntegrationProperties(
@@ -43,7 +46,9 @@ class HttpPaymentAdapterContractTest {
                 new IntegrationProperties.Invoice("http://unused:0")
         );
 
-        adapter = new HttpPaymentAdapter(RestClient.builder(), properties);
+        var requestFactory = new JdkClientHttpRequestFactory(
+                HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build());
+        adapter = new HttpPaymentAdapter(RestClient.builder().requestFactory(requestFactory), properties);
     }
 
     @Test

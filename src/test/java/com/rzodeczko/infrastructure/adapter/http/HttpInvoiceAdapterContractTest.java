@@ -8,9 +8,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.cloud.contract.stubrunner.StubRunnerOptionsBuilder;
 import org.springframework.cloud.contract.stubrunner.junit.StubRunnerExtension;
 import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
+import java.net.http.HttpClient;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,7 +45,9 @@ class HttpInvoiceAdapterContractTest {
                 new IntegrationProperties.Invoice(baseUrl)
         );
 
-        adapter = new HttpInvoiceAdapter(RestClient.builder(), properties);
+        var requestFactory = new JdkClientHttpRequestFactory(
+                HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build());
+        adapter = new HttpInvoiceAdapter(RestClient.builder().requestFactory(requestFactory), properties);
     }
 
     @Test
