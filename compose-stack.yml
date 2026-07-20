@@ -122,10 +122,37 @@ services:
 
 
   # --------------------------------------------------------------------------------------------------------------------
+  # REDIS (rate limiter for invoice service)
+  # --------------------------------------------------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mr-network
+
+
+  # --------------------------------------------------------------------------------------------------------------------
   # PAYMENT SERVICE
   # --------------------------------------------------------------------------------------------------------------------
   payment-service:
-    image: mrzodeczko/payments-service:1.0.0
+    image: mrzodeczko/payments-service:2.0.0
     restart: on-failure:5
     ports:
       - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
@@ -164,14 +191,17 @@ services:
   # INVOICE SERVICE
   # --------------------------------------------------------------------------------------------------------------------
   invoice-service:
-    image: mrzodeczko/invoice-service:1.0.0
+    image: mrzodeczko/invoice-service:2.0.0
     restart: on-failure:5
     ports:
       - "${INVOICE_SERVICE_PORT}:${INVOICE_SERVICE_PORT}"
     depends_on:
       invoice-mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_APPLICATION_NAME: ${INVOICE_SERVICE_APPLICATION_NAME}
       SPRING_DATASOURCE_URL: jdbc:mysql://${INVOICE_SERVICE_MYSQL_DB_HOST}:3306/${INVOICE_SERVICE_MYSQL_DB_NAME}?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: ${INVOICE_SERVICE_MYSQL_DB_USER}
@@ -197,7 +227,7 @@ services:
   # ORDER SERVICE
   # --------------------------------------------------------------------------------------------------------------------
   order-service:
-    image: mrzodeczko/order-service:1.0.0
+    image: mrzodeczko/order-service:2.0.0
     restart: on-failure:5
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
