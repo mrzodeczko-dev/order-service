@@ -17,7 +17,8 @@ COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
     mvn clean package -DskipTests -Dspring-cloud-contract.skip=true -B --no-transfer-progress
 
-RUN java -Djarmode=tools -jar target/*.jar extract --destination target/extracted
+RUN rm -f target/*-stubs.jar && \
+    java -Djarmode=tools -jar target/*.jar extract --destination target/extracted
 
 # Runtime stage
 FROM eclipse-temurin:25-jre-alpine AS runtime
